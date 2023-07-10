@@ -6,6 +6,12 @@ terraform {
         version = ">=3.49.0"
     }
   }
+  backend "azurerm" {
+    resource_group_name  = "sysadmins-terraform"
+    storage_account_name = "sysadminstfstate"
+    container_name       = "tfstate"
+    key                  = "prod.terraform.tfstate"
+  }
 }
 
 # configure the azure provider
