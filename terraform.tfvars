@@ -1,12 +1,6 @@
 rg_name     = "rg-secretreader-shared-01"
 rg_location = "West Europe"
 
-vn_name          = "vn-secretreader-01"
-vn_address_space = {
-    dev = ["10.0.1.0/24"],
-    prod = ["10.0.0.0/24"]
-}
-
 storage_account_name = "secretreaderstorage01"
 storage_account_tier = "Standard"
 

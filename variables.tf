@@ -8,19 +8,6 @@ variable "rg_location" {
   type = string
 }
 
-variable "vn_name" {
-  description = "Name of the virtual network"
-  type = string
-}
-
-variable "vn_address_space" {
-  description = "Adress space of the virtual network"
-  type = object({
-    dev = list(string),
-    prod = list(string)
-  })
-}
-
 variable "storage_account_name" {
   description = "Name of the storage account"
   type = string
