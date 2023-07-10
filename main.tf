@@ -6,6 +6,8 @@ terraform {
         version = "=3.64.0"
     }
   }
+
+  # configure remote terraform state
   backend "azurerm" {
     resource_group_name  = "sysadmins-terraform"
     storage_account_name = "sysadminstfstate"
@@ -13,6 +15,7 @@ terraform {
     key                  = "terraform.tfstate"
   }
 }
+
 
 # configure the azure provider
 provider "azurerm" {
@@ -24,11 +27,13 @@ provider "azurerm" {
   }
 }
 
+
 # create a resource group inside a subscription
 resource "azurerm_resource_group" "srs01" {
   name     = "${var.rg_name}-${terraform.workspace}"
   location = var.rg_location
 }
+
 
 # create a managed identity for function app
 resource "azurerm_user_assigned_identity" "function-app-identity" {
@@ -36,6 +41,7 @@ resource "azurerm_user_assigned_identity" "function-app-identity" {
   location            = azurerm_resource_group.srs01.location
   name                = "key-vault-secret-reader"
 }
+
 
 # create a storage account
 resource "azurerm_storage_account" "sa01" {
@@ -51,6 +57,7 @@ resource "azurerm_storage_account" "sa01" {
   }
 }
 
+
 # create a service plan for function apps
 resource "azurerm_service_plan" "sp01" {
   name                = "${var.service_plan_name}-${terraform.workspace}"
@@ -59,6 +66,7 @@ resource "azurerm_service_plan" "sp01" {
   os_type             = "Linux"
   sku_name            = var.service_plan_tier
 }
+
 
 # create and configure an azure linux function app
 # azure function apps are deprecated in azure provider 3.0
@@ -94,8 +102,10 @@ resource "azurerm_linux_function_app" "lfa01" {
   }
 }
 
+
 # current config for key vault
 data "azurerm_client_config" "current" {}
+
 
 # create and configure a key vault
 resource "azurerm_key_vault" "kv01" {
@@ -115,6 +125,7 @@ resource "azurerm_key_vault" "kv01" {
   sku_name = "standard" # keeping the costs down
 }
 
+
 # service principal access to the key vault
 resource "azurerm_key_vault_access_policy" "service-principal" {
   key_vault_id = azurerm_key_vault.kv01.id
@@ -129,6 +140,7 @@ resource "azurerm_key_vault_access_policy" "service-principal" {
     "Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"
   ]
 }
+
 
 # configure key vault acces for the function app
 resource "azurerm_key_vault_access_policy" "function-app" {
@@ -149,6 +161,7 @@ resource "azurerm_key_vault_secret" "kvs_hello" {
   name         = var.sysadmins_secret_name
   key_vault_id = azurerm_key_vault.kv01.id
   value        = var.sysadmins_secret_value
+  content_type = "string"
 
   lifecycle {
     ignore_changes = [ value ]
