@@ -81,6 +81,12 @@ resource "azurerm_linux_function_app" "lfa01" {
       python_version = "3.10"
     }
   }
+
+  app_settings = {
+    KEY_VAULT_NAME          = var.key_vault_name
+    SECRET_NAME             = var.sysadmins_secret_name
+    APPLICATION_ENVIRONMENT = terraform.workspace
+  }
 }
 
 # current config for key vault

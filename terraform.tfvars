@@ -24,4 +24,4 @@ sysadmins_secret_name = "hello-sysadmins"
 # a library and passed to the terraform during terrafrom
 # operations such as plan or apply
 # terraform apply -var=`sysadmins_secret_value="Hello SysAdmins!"`
-#sysadmins_secret_value = "Hello SysAdmins!"
+sysadmins_secret_value = "Hello SysAdmins!"
