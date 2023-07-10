@@ -3,7 +3,7 @@ terraform {
   required_providers {
     azurerm = {
         source  = "hashicorp/azurerm"
-        version = ">=3.49.0"
+        version = "=3.64.0"
     }
   }
   backend "azurerm" {
@@ -30,14 +30,12 @@ resource "azurerm_resource_group" "srs01" {
   location = var.rg_location
 }
 
-# TODO: remove virtual network block
-# create a virtual network for the inter-service connections
-# resource "azurerm_virtual_network" "srvn01" {
-#   name                = "${var.vn_name}-${terraform.workspace}"
-#   resource_group_name = azurerm_resource_group.srs01.name
-#   location            = azurerm_resource_group.srs01.location
-#   address_space       = var.vn_address_space["${terraform.workspace}"]
-# }
+# create a managed identity for function app
+resource "azurerm_user_assigned_identity" "function-app-identity" {
+  resource_group_name = azurerm_resource_group.srs01.name
+  location            = azurerm_resource_group.srs01.location
+  name                = "key-vault-secret-reader"
+}
 
 # create a storage account
 resource "azurerm_storage_account" "sa01" {
@@ -76,6 +74,13 @@ resource "azurerm_linux_function_app" "lfa01" {
   storage_account_access_key = azurerm_storage_account.sa01.primary_access_key
   service_plan_id            = azurerm_service_plan.sp01.id
 
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [ azurerm_user_assigned_identity.function-app-identity.id ]
+  }
+
+  key_vault_reference_identity_id = azurerm_user_assigned_identity.function-app-identity.id
+
   site_config {
     application_stack {
       python_version = "3.10"
@@ -108,25 +113,36 @@ resource "azurerm_key_vault" "kv01" {
   }
 
   sku_name = "standard" # keeping the costs down
+}
 
-  # configure access policies for the key vault  
-  access_policy = [
-    {
-      # service principal access
-      application_id = data.azurerm_client_config.current.client_id
-      tenant_id = data.azurerm_client_config.current.tenant_id
-      object_id = data.azurerm_client_config.current.object_id
+# service principal access to the key vault
+resource "azurerm_key_vault_access_policy" "service-principal" {
+  key_vault_id = azurerm_key_vault.kv01.id
+  application_id = data.azurerm_client_config.current.client_id
+  tenant_id = data.azurerm_client_config.current.tenant_id
+  object_id = data.azurerm_client_config.current.object_id
 
-      key_permissions         = [ "Get" ]
-      storage_permissions     = [ "Get" ]
-      certificate_permissions = [ "Get" ]
-      secret_permissions = [
-        "Get", "List", "Set", "Delete", "Recover", "Purge"
-      ]
-    }
-    #TODO add function app access
+  key_permissions         = [ "Get" ]
+  storage_permissions     = [ "Get" ]
+  certificate_permissions = [ "Get" ]
+  secret_permissions = [
+    "Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"
   ]
 }
+
+# configure key vault acces for the function app
+resource "azurerm_key_vault_access_policy" "function-app" {
+  # function app access
+  # done trough a user managed identity
+  key_vault_id = azurerm_key_vault.kv01.id
+  tenant_id = azurerm_user_assigned_identity.function-app-identity.tenant_id
+  object_id = azurerm_user_assigned_identity.function-app-identity.id
+
+  secret_permissions = [
+    "Get", "List"
+  ]
+}
+
 
 # create a key vault secret
 resource "azurerm_key_vault_secret" "kvs_hello" {
