@@ -30,13 +30,14 @@ resource "azurerm_resource_group" "srs01" {
   location = var.rg_location
 }
 
+# TODO: remove virtual network block
 # create a virtual network for the inter-service connections
-resource "azurerm_virtual_network" "srvn01" {
-  name                = "${var.vn_name}-${terraform.workspace}"
-  resource_group_name = azurerm_resource_group.srs01.name
-  location            = azurerm_resource_group.srs01.location
-  address_space       = var.vn_address_space["${terraform.workspace}"]
-}
+# resource "azurerm_virtual_network" "srvn01" {
+#   name                = "${var.vn_name}-${terraform.workspace}"
+#   resource_group_name = azurerm_resource_group.srs01.name
+#   location            = azurerm_resource_group.srs01.location
+#   address_space       = var.vn_address_space["${terraform.workspace}"]
+# }
 
 # create a storage account
 resource "azurerm_storage_account" "sa01" {
@@ -45,6 +46,11 @@ resource "azurerm_storage_account" "sa01" {
   location                 = azurerm_resource_group.srs01.location
   account_tier             = var.storage_account_tier
   account_replication_type = "LRS"
+
+  network_rules {
+    default_action = "Deny"
+    bypass = [ "AzureServices" ]
+  }
 }
 
 # create a service plan for function apps
@@ -90,11 +96,17 @@ resource "azurerm_key_vault" "kv01" {
   soft_delete_retention_days  = var.key_vault_retention_days
   purge_protection_enabled    = false
 
+  network_acls {
+    default_action = "Deny"
+    bypass         = "AzureServices"
+  }
+
   sku_name = "standard" # keeping the costs down
 
   # configure access policies for the key vault  
   access_policy = [
     {
+      # service principal access
       application_id = data.azurerm_client_config.current.client_id
       tenant_id = data.azurerm_client_config.current.tenant_id
       object_id = data.azurerm_client_config.current.object_id
@@ -106,6 +118,7 @@ resource "azurerm_key_vault" "kv01" {
         "Get", "List", "Set", "Delete", "Recover"
       ]
     }
+    #TODO add function app access
   ]
 }
 
