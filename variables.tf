@@ -1,3 +1,28 @@
+variable "client_id" {
+  description = "ID of the service principal"
+  type = string
+}
+
+variable "tenant_id" {
+  description = "ID of the tenant"
+  type = string
+}
+
+variable "subscription_id" {
+  description = "ID of the Azure Subscription"
+  type = string
+}
+
+variable "client_secret" {
+  description = "Secret key to authenticate service principal"
+  type = string
+}
+
+variable "client_secret" {
+  description = "Secret key to authenticate service principal"
+  type = string
+}
+
 variable "rg_name" {
   description = "Name of the resource group"
   type = string

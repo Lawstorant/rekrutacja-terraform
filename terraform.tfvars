@@ -1,3 +1,7 @@
+client_id       = "f637a7aa-4460-4846-a6c6-1b7a8c60de03"
+tenant_id       = "da07669b-f847-41ae-97fb-5b5071ad9647"
+subscription_id = "0122c68d-1f58-4cff-a00d-c2847b621dd2"
+
 rg_name     = "rg-secretreader-shared-01"
 rg_location = "West Europe"
 

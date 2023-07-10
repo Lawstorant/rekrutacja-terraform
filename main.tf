@@ -22,6 +22,11 @@ provider "azurerm" {
       recover_soft_deleted_key_vaults = true
     }
   }
+
+  client_id       = var.client_id
+  client_secret   = var.client_secret
+  tenant_id       = var.tenant_id
+  subscription_id = var.subscription_id
 }
 
 # create a resource group inside a subscription
@@ -71,7 +76,6 @@ resource "azurerm_linux_function_app" "lfa01" {
   service_plan_id            = azurerm_service_plan.sp01.id
 
   site_config {
-    app_settings {}
     application_stack {
       python_version = "3.10"
     }
