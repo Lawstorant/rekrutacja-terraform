@@ -10,7 +10,7 @@ terraform {
     resource_group_name  = "sysadmins-terraform"
     storage_account_name = "sysadminstfstate"
     container_name       = "tfstate"
-    key                  = "prod.terraform.tfstate"
+    key                  = "terraform.tfstate"
   }
 }
 
@@ -115,7 +115,7 @@ resource "azurerm_key_vault" "kv01" {
       storage_permissions     = [ "Get" ]
       certificate_permissions = [ "Get" ]
       secret_permissions = [
-        "Get", "List", "Set", "Delete", "Recover"
+        "Get", "List", "Set", "Delete", "Recover", "Purge"
       ]
     }
     #TODO add function app access
@@ -123,14 +123,12 @@ resource "azurerm_key_vault" "kv01" {
 }
 
 # create a key vault secret
-data "azurerm_key_vault_secret" "kvs_hello" {
-  name            = var.sysadmins_secret_name
-  key_vault_id    = azurerm_key_vault.kv01.id
-  #value           = var.sysadmins_secret_value
-}
+resource "azurerm_key_vault_secret" "kvs_hello" {
+  name         = var.sysadmins_secret_name
+  key_vault_id = azurerm_key_vault.kv01.id
+  value        = var.sysadmins_secret_value
 
-# check if the secret has been properly set
-# output "secret_value" {
-#   value     = data.azurerm_key_vault_secret.kvs_hello.value
-#   sensitive = true
-# }
+  lifecycle {
+    ignore_changes = [ value ]
+  }
+}

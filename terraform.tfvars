@@ -23,4 +23,5 @@ sysadmins_secret_name = "hello-sysadmins"
 # Secret values should be securely stored in some kind of
 # a library and passed to the terraform during terrafrom
 # operations such as plan or apply
-sysadmins_secret_value = "Hello SysAdmins!"
+# terraform apply -var=`sysadmins_secret_value="Hello SysAdmins!"`
+#sysadmins_secret_value = "Hello SysAdmins!"
