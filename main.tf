@@ -54,7 +54,9 @@ resource "azurerm_service_plan" "sp01" {
 # azure function apps are deprecated in azure provider 3.0
 # and will be removed completetly in 4.0.
 resource "azurerm_linux_function_app" "lfa01" {
-  name                = var.function_app_01_name
+  # select application name based on the active workspace
+  name = var.function_app_01_names["${terraform.workspace}"]
+
   resource_group_name = azurerm_resource_group.srs01.name
   location            = azurerm_resource_group.srs01.location
 
@@ -84,14 +86,6 @@ resource "azurerm_key_vault" "kv01" {
 
   # configure access policies for the key vault  
   access_policy = [
-    {
-      tenant_id = data.azurerm_client_config.current.tenant_id
-      object_id = data.azurerm_client_config.current.object_id
-
-      secret_permissions = [
-        "Get",
-      ]
-    },
     {
       tenant_id = data.azurerm_client_config.current.tenant_id
       object_id = data.azurerm_client_config.current.object_id

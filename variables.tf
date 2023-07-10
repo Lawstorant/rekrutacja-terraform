@@ -15,7 +15,7 @@ variable "vn_name" {
 
 variable "vn_address_space" {
   description = "Adress space of the virtual network"
-  type = list
+  type = list(string)
 }
 
 variable "storage_account_name" {
@@ -38,9 +38,12 @@ variable "service_plan_tier" {
   type = string
 }
 
-variable "function_app_01_name" {
+variable "function_app_01_names" {
   description = "Name of the function app"
-  type = string
+  type = object({
+    prod = string,
+    dev = string
+  })
 }
 
 variable "key_vault_name" {
@@ -67,7 +70,7 @@ variable "sysadmins_secret_expiration" {
 # do not store secrets in repository
 variable "sysadmins_secret_value" {
   description = "Value of the hello-sysadmins secret"
-  type = string
+  type      = string
   sensitive = true
-  default = "unset"
+  default   = "unset"
 }
