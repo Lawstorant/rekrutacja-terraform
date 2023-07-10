@@ -22,30 +22,25 @@ provider "azurerm" {
       recover_soft_deleted_key_vaults = true
     }
   }
-
-  client_id       = var.client_id
-  client_secret   = var.client_secret
-  tenant_id       = var.tenant_id
-  subscription_id = var.subscription_id
 }
 
 # create a resource group inside a subscription
 resource "azurerm_resource_group" "srs01" {
-  name     = var.rg_name
+  name     = "${var.rg_name}-${terraform.workspace}"
   location = var.rg_location
 }
 
 # create a virtual network for the inter-service connections
 resource "azurerm_virtual_network" "srvn01" {
-  name                = var.vn_name
+  name                = "${var.vn_name}-${terraform.workspace}"
   resource_group_name = azurerm_resource_group.srs01.name
   location            = azurerm_resource_group.srs01.location
-  address_space       = var.vn_address_space
+  address_space       = var.vn_address_space["${terraform.workspace}"]
 }
 
 # create a storage account
 resource "azurerm_storage_account" "sa01" {
-  name                     = var.storage_account_name
+  name                     = "${var.storage_account_name}${terraform.workspace}"
   resource_group_name      = azurerm_resource_group.srs01.name
   location                 = azurerm_resource_group.srs01.location
   account_tier             = var.storage_account_tier
@@ -54,7 +49,7 @@ resource "azurerm_storage_account" "sa01" {
 
 # create a service plan for function apps
 resource "azurerm_service_plan" "sp01" {
-  name                = var.service_plan_name
+  name                = "${var.service_plan_name}-${terraform.workspace}"
   resource_group_name = azurerm_resource_group.srs01.name
   location            = azurerm_resource_group.srs01.location
   os_type             = "Linux"
@@ -66,7 +61,7 @@ resource "azurerm_service_plan" "sp01" {
 # and will be removed completetly in 4.0.
 resource "azurerm_linux_function_app" "lfa01" {
   # select application name based on the active workspace
-  name = var.function_app_01_names["${terraform.workspace}"]
+  name = "${var.function_app_01_name}-${terraform.workspace}"
 
   resource_group_name = azurerm_resource_group.srs01.name
   location            = azurerm_resource_group.srs01.location
@@ -82,9 +77,12 @@ resource "azurerm_linux_function_app" "lfa01" {
   }
 }
 
+# current config for key vault
+data "azurerm_client_config" "current" {}
+
 # create and configure a key vault
 resource "azurerm_key_vault" "kv01" {
-  name                        = var.key_vault_name
+  name                        = "${var.key_vault_name}-${terraform.workspace}"
   location                    = azurerm_resource_group.srs01.location
   resource_group_name         = azurerm_resource_group.srs01.name
   enabled_for_disk_encryption = true
@@ -97,22 +95,34 @@ resource "azurerm_key_vault" "kv01" {
   # configure access policies for the key vault  
   access_policy = [
     {
+      application_id = data.azurerm_client_config.current.client_id
       tenant_id = data.azurerm_client_config.current.tenant_id
       object_id = data.azurerm_client_config.current.object_id
 
-      secret_permissions = [
-        "Get",
-      ]
+      key_permissions = [
+      "Get",
+    ]
+
+    secret_permissions = [
+      "Get",
+    ]
+
+    storage_permissions = [
+      "Get",
+    ]
+
+    certificate_permissions = [
+      "Get",
+    ]
     }
   ]
 }
 
 # create a key vault secret
 data "azurerm_key_vault_secret" "kvs_hello" {
-  name            = var.hello-sysadmins_name
-  key_vault_id    = data.azurerm_key_vault.kv01.id
-  expiration_date = var.sysadmins_secret_expiration
-  value           = var.sysadmins_secret_value
+  name            = var.sysadmins_secret_name
+  key_vault_id    = azurerm_key_vault.kv01.id
+  #value           = var.sysadmins_secret_value
 }
 
 # check if the secret has been properly set

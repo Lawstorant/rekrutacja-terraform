@@ -1,28 +1,3 @@
-variable "client_id" {
-  description = "ID of the service principal"
-  type = string
-}
-
-variable "tenant_id" {
-  description = "ID of the tenant"
-  type = string
-}
-
-variable "subscription_id" {
-  description = "ID of the Azure Subscription"
-  type = string
-}
-
-variable "client_secret" {
-  description = "Secret key to authenticate service principal"
-  type = string
-}
-
-variable "client_secret" {
-  description = "Secret key to authenticate service principal"
-  type = string
-}
-
 variable "rg_name" {
   description = "Name of the resource group"
   type = string
@@ -40,7 +15,10 @@ variable "vn_name" {
 
 variable "vn_address_space" {
   description = "Adress space of the virtual network"
-  type = list(string)
+  type = object({
+    dev = list(string),
+    prod = list(string)
+  })
 }
 
 variable "storage_account_name" {
@@ -63,9 +41,9 @@ variable "service_plan_tier" {
   type = string
 }
 
-variable "function_app_01_names" {
+variable "function_app_01_name" {
   description = "Name of the function app"
-  type = map(string)
+  type = string
 }
 
 variable "key_vault_name" {
@@ -80,11 +58,6 @@ variable "key_vault_retention_days" {
 
 variable "sysadmins_secret_name" {
   description = "Name of the hello-sysadmins secret"
-  type = string
-}
-
-variable "sysadmins_secret_expiration" {
-  description = "Expiration date of the hello-sysadmins secret"
   type = string
 }
 
