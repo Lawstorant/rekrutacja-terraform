@@ -40,10 +40,7 @@ variable "service_plan_tier" {
 
 variable "function_app_01_names" {
   description = "Name of the function app"
-  type = object({
-    prod = string,
-    dev = string
-  })
+  type = map(string)
 }
 
 variable "key_vault_name" {
