@@ -1,4 +1,4 @@
-rg_name     = "rg-secretreader-shared-01"
+rg_name     = "rg-secretreader"
 rg_location = "West Europe"
 
 storage_account_name = "secretreaderstorage01"
