@@ -96,10 +96,13 @@ resource "azurerm_linux_function_app" "lfa01" {
   }
 
   app_settings = {
-    KEY_VAULT_NAME  = var.key_vault_name
-    SECRET_NAME     = var.sysadmins_secret_name
-    AZURE_CLIENT_ID = azurerm_user_assigned_identity.function-app-identity.id
+    KEY_VAULT_NAME          = var.key_vault_name
+    SECRET_NAME             = var.sysadmins_secret_name
+    AZURE_CLIENT_ID         = azurerm_user_assigned_identity.function-app-identity.id
     APPLICATION_ENVIRONMENT = terraform.workspace
+    
+    ENABLE_ORYX_BUILD              = "true"
+    SCM_DO_BUILD_DURING_DEPLOYMENT = "true"
   }
 
   depends_on = [ azurerm_user_assigned_identity.function-app-identity ]
