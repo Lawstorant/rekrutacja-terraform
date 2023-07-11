@@ -43,7 +43,7 @@ resource "azurerm_user_assigned_identity" "function-app-identity" {
 }
 
 
-# create a storage account
+# create a storage account for function app
 resource "azurerm_storage_account" "sa01" {
   name                     = "${var.storage_account_name}${terraform.workspace}"
   resource_group_name      = azurerm_resource_group.srs01.name
@@ -96,10 +96,13 @@ resource "azurerm_linux_function_app" "lfa01" {
   }
 
   app_settings = {
-    KEY_VAULT_NAME          = var.key_vault_name
-    SECRET_NAME             = var.sysadmins_secret_name
+    KEY_VAULT_NAME  = var.key_vault_name
+    SECRET_NAME     = var.sysadmins_secret_name
+    AZURE_CLIENT_ID = azurerm_user_assigned_identity.function-app-identity.id
     APPLICATION_ENVIRONMENT = terraform.workspace
   }
+
+  depends_on = [ azurerm_user_assigned_identity.function-app-identity ]
 }
 
 
@@ -153,6 +156,8 @@ resource "azurerm_key_vault_access_policy" "function-app" {
   secret_permissions = [
     "Get", "List"
   ]
+
+  depends_on = [ azurerm_user_assigned_identity.function-app-identity ]
 }
 
 
