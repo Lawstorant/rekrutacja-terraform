@@ -1,7 +1,7 @@
 rg_name     = "rg-secretreader"
 rg_location = "West Europe"
 
-storage_account_name = "secretreaderstorage01"
+storage_account_name = "srstorage01"
 storage_account_tier = "Standard"
 
 service_plan_name    = "sp-secretreader-01"

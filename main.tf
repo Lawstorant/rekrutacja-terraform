@@ -99,6 +99,7 @@ resource "azurerm_linux_function_app" "lfa01" {
     
     # hair pulling moment
     # ENABLE_ORYX_BUILD              = "true"
+    AzureWebJobsFeatureFlags = "EnableWorkerIndexing"
     SCM_DO_BUILD_DURING_DEPLOYMENT = "true"
   }
 
