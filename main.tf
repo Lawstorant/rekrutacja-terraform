@@ -101,8 +101,9 @@ resource "azurerm_linux_function_app" "lfa01" {
     AZURE_CLIENT_ID         = azurerm_user_assigned_identity.function-app-identity.id
     APPLICATION_ENVIRONMENT = terraform.workspace
     
-    ENABLE_ORYX_BUILD              = "true"
-    SCM_DO_BUILD_DURING_DEPLOYMENT = "true"
+    # hair pulling moment
+    # ENABLE_ORYX_BUILD              = "true"
+    # SCM_DO_BUILD_DURING_DEPLOYMENT = "true"
   }
 
   depends_on = [ azurerm_user_assigned_identity.function-app-identity ]
