@@ -10,3 +10,9 @@ Najpierw wczytajmy zmienne środowiskowe
 $ source configure-env-variables.sh "<service_principal_secret>"
 $ az login --service-principal -u "$ARM_CLIENT_ID" -p "$ARM_CLIENT_SECRET" --tenant "$ARM_TENANT_ID"
 ```
+
+dostępne workspejsy:
+- dev
+- prod
+
+tfstate przechowywany jest zdalnie na storage appie
