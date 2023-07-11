@@ -39,7 +39,7 @@ resource "azurerm_resource_group" "srs01" {
 resource "azurerm_user_assigned_identity" "function-app-identity" {
   resource_group_name = azurerm_resource_group.srs01.name
   location            = azurerm_resource_group.srs01.location
-  name                = "key-vault-secret-reader"
+  name                = "mi-secret-reader-${terraform.workspace}"
 }
 
 
@@ -50,11 +50,7 @@ resource "azurerm_storage_account" "sa01" {
   location                 = azurerm_resource_group.srs01.location
   account_tier             = var.storage_account_tier
   account_replication_type = "LRS"
-
-  network_rules {
-    default_action = "Deny"
-    bypass = [ "AzureServices" ]
-  }
+  public_network_access_enabled = true
 }
 
 
@@ -91,19 +87,19 @@ resource "azurerm_linux_function_app" "lfa01" {
 
   site_config {
     application_stack {
-      python_version = "3.10"
+      python_version = "3.9"
     }
   }
 
   app_settings = {
     KEY_VAULT_NAME          = var.key_vault_name
     SECRET_NAME             = var.sysadmins_secret_name
-    AZURE_CLIENT_ID         = azurerm_user_assigned_identity.function-app-identity.id
+    AZURE_CLIENT_ID         = azurerm_user_assigned_identity.function-app-identity.client_id
     APPLICATION_ENVIRONMENT = terraform.workspace
     
     # hair pulling moment
     # ENABLE_ORYX_BUILD              = "true"
-    # SCM_DO_BUILD_DURING_DEPLOYMENT = "true"
+    SCM_DO_BUILD_DURING_DEPLOYMENT = "true"
   }
 
   depends_on = [ azurerm_user_assigned_identity.function-app-identity ]
@@ -123,11 +119,7 @@ resource "azurerm_key_vault" "kv01" {
   tenant_id                   = data.azurerm_client_config.current.tenant_id
   soft_delete_retention_days  = var.key_vault_retention_days
   purge_protection_enabled    = false
-
-  network_acls {
-    default_action = "Deny"
-    bypass         = "AzureServices"
-  }
+  public_network_access_enabled = true
 
   sku_name = "standard" # keeping the costs down
 }
@@ -136,13 +128,12 @@ resource "azurerm_key_vault" "kv01" {
 # service principal access to the key vault
 resource "azurerm_key_vault_access_policy" "service-principal" {
   key_vault_id = azurerm_key_vault.kv01.id
-  application_id = data.azurerm_client_config.current.client_id
   tenant_id = data.azurerm_client_config.current.tenant_id
   object_id = data.azurerm_client_config.current.object_id
 
-  key_permissions         = [ "Get" ]
-  storage_permissions     = [ "Get" ]
-  certificate_permissions = [ "Get" ]
+  key_permissions         = [ "Get", "List" ]
+  storage_permissions     = [ "Get", "List" ]
+  certificate_permissions = [ "Get", "List" ]
   secret_permissions = [
     "Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"
   ]
@@ -155,7 +146,7 @@ resource "azurerm_key_vault_access_policy" "function-app" {
   # done trough a user managed identity
   key_vault_id = azurerm_key_vault.kv01.id
   tenant_id = azurerm_user_assigned_identity.function-app-identity.tenant_id
-  object_id = azurerm_user_assigned_identity.function-app-identity.id
+  object_id = azurerm_user_assigned_identity.function-app-identity.principal_id
 
   secret_permissions = [
     "Get", "List"
@@ -175,4 +166,7 @@ resource "azurerm_key_vault_secret" "kvs_hello" {
   lifecycle {
     ignore_changes = [ value ]
   }
+
+  # create only after granting secret access to administrative service principal
+  depends_on = [ azurerm_key_vault_access_policy.service-principal ]
 }
